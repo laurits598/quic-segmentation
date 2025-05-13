@@ -1,0 +1,131 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity quic_top_entity is
+    port (
+        clk       : in std_logic;
+        reset     : in std_logic;
+		  data_in	: in std_logic_vector(63 downto 0);
+        led_out   : out std_logic  -- Use rdy_to_send to drive an LED
+    );
+end quic_top_entity;
+
+architecture arch of quic_top_entity is
+
+    -- Internal signals for input_buffer
+    --signal data_in               : std_logic_vector(63 downto 0) := (others => '0');
+    signal is_seg_rdy_for_nxt_pkt : std_logic := '0';
+    signal is_seg_rdy_for_payload : std_logic := '0';
+
+	 signal data_in_s : std_logic_vector(63 downto 0) := (others => '0');
+	 
+    signal rdy_to_send     : std_logic;
+    
+	 -- Internal signals for Input Buffer
+    signal data_out_quic      : std_logic_vector(63 downto 0);
+    signal metadata_out_quic  : std_logic_vector(7 downto 0);
+    signal mac_hdr_out_quic   : std_logic_vector(63 downto 0);
+    signal ip_hdr_out_quic    : std_logic_vector(63 downto 0);
+    signal udp_hdr_out_quic   : std_logic_vector(63 downto 0);
+    signal preamble_quic      : std_logic_vector(7 downto 0);
+    signal total_len_quic     : std_logic_vector(15 downto 0);
+    signal seg_len_quic       : std_logic_vector(7 downto 0);
+    signal seg_count_quic     : std_logic_vector(7 downto 0);
+    signal mac_hdr_len_quic   : std_logic_vector(7 downto 0);
+    signal ip_hdr_len_quic    : std_logic_vector(7 downto 0);
+    signal udp_hdr_len_quic   : std_logic_vector(7 downto 0);
+	 
+	 
+	 
+	 
+
+begin
+
+    -- Instantiate input_buffer internally
+    u_input_buffer: entity work.input_buffer
+        port map (
+            clk                   => clk,
+            reset                 => reset,
+            data_in               => data_in,
+            is_seg_rdy_for_nxt_pkt => is_seg_rdy_for_nxt_pkt,
+            is_seg_rdy_for_payload => is_seg_rdy_for_payload,
+
+            rdy_to_send     => rdy_to_send,
+            data_out        => data_out_quic,
+            metadata_out    => metadata_out_quic,
+            mac_hdr_out     => mac_hdr_out_quic,
+            ip_hdr_out      => ip_hdr_out_quic,
+            udp_hdr_out     => udp_hdr_out_quic,
+            preamble        => preamble_quic,
+            total_len       => total_len_quic,
+            seg_len         => seg_len_quic,
+            seg_count       => seg_count_quic,
+            mac_hdr_len     => mac_hdr_len_quic,
+            ip_hdr_len      => ip_hdr_len_quic,
+            udp_hdr_len     => udp_hdr_len_quic
+        );
+
+    -- Drive a simple output for testing
+    led_out <= rdy_to_send;
+	 data_in_s <= data_in;
+	 
+	 
+	 
+	 u_segmentation: entity work.segmentation
+		port map (
+        clk              => clk,
+        reset            => reset,
+        enable           => '1',
+
+        rdy_for_packet   => '1',
+		  rdy_to_receive	 => open,
+
+        mac_hdr_in       => mac_hdr_out_quic,
+        ip_hdr_in        => ip_hdr_out_quic,
+        udp_hdr_in       => udp_hdr_out_quic,
+
+        mac_hdr_len      => mac_hdr_len_quic,
+        ip_hdr_len       => ip_hdr_len_quic,
+        udp_hdr_len      => udp_hdr_len_quic,
+
+        mac_hdr_out      => open,
+        ip_hdr_out       => open,
+        udp_hdr_out      => open,
+
+        mac_hdr_len_out  => open,
+        ip_hdr_len_out   => open,
+        udp_hdr_len_out  => open
+    );
+	 
+	 
+	 
+	 
+
+end architecture;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
